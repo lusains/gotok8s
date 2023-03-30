@@ -1,0 +1,136 @@
+#这两个configmap是配置harbor信息
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: buildkitdconfig
+data:
+  buildkitd.toml: |
+    debug = true
+    [registry."10.56.184.75:8000"]
+    http = true
+    insecure = true
+    [registry."image.cestc.cn"]
+    ca = ["/etc/certs/registry.pem"]
+    [[registry."image.cestc.cn".keypair]]
+    key = "/etc/certs/registry_key.pem"
+    cert = "/etc/certs/registry_cert.pem"
+
+---
+#Mount SSL certificates in the Pod with secret
+kind: Secret
+apiVersion: v1
+metadata:
+  name: buildkitdsecret
+type: Opaque
+data:
+  registry_ca.pem: |
+    dddd
+  registry_crt.pem: |
+    dddd
+  registry_key.pem: |
+    dddd
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: dockerconfig
+data:
+  config.json: |
+    {
+      "auths": {
+        "10.56.184.75:8000": {
+          "auth": "YWRtaW46UGFzc0B3b3JkMQ=="
+        }
+      }
+    }
+
+#这里是写需要打包镜像的Dockerfile文件
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: dockerfile
+data:
+  Dockerfile: |
+    FROM 10.56.184.75:8000/paas/base_jdk:8
+    MAINTAINER lvshan@cestc.cn
+    ENV JAVA_OPTS="" \
+    AUTH_ENABLE=false \
+    AUTH_USERNAME="sentinel" \
+    AUTH_PASSWORD="sentinel" \
+    DB_URL="" \
+    DB_USERNAME="" \
+    DB_PASSWORD="" \
+    DB_NAME=""
+    # 开放端口
+    EXPOSE 8080
+    #添加到本地
+    COPY sentinel-dashboard.jar /sentinel/
+    WORKDIR /sentinel
+    CMD java \
+    -Dserver.port=8080 \
+    -Dauth.enabled=${AUTH_ENABLE} \
+    -Dauth.username=${AUTH_USERNAME} \
+    -Dauth.password=${AUTH_PASSWORD} \
+    -Dinfluxdb.url=${DB_URL} \
+    -Dinfluxdb.username=${DB_USERNAME} \
+    -Dinfluxdb.password=${DB_PASSWORD} \
+    -Dinfluxdb.database=${DB_NAME} \
+    $JAVA_OPTS \
+    -jar sentinel-dashboard.jar
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildkit
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: buildkit
+          image: 10.56.184.75:8000/paas/buildkit:master
+          command:
+            - buildctl-daemonless.sh
+          args:
+            - build
+            - --frontend
+            - dockerfile.v0
+            - --local
+            - context=/workspace
+            - --local
+            - dockerfile=/workspace
+            - --opt
+            - platform=linux/amd64,linux/arm64
+            - --output
+            - type=image,name=10.56.184.75:8000/paas/sentinel:1.8.0,push=true
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: buildkitdvo
+              mountPath: /etc/buildkit/buildkitd.toml
+              subPath: buildkitd.toml
+            - name: dockervo
+              mountPath: /root/.docker/config.json
+              subPath: config.json
+            - name: dockerfilevo
+              mountPath: /workspace/Dockerfile
+              subPath: Dockerfile
+            - name: buildkitdsecret
+              mountPath: /etc/certs
+              readOnly: true
+      volumes:
+        - name: buildkitdvo
+          configMap:
+            name: buildkitdconfig
+        - name: dockervo
+          configMap:
+            name: dockerconfig
+        - name: dockerfilevo
+          configMap:
+            name: dockerfile
+        - name: buildkitdsecret
+          secret:
+            secretName: buildkitdsecret
