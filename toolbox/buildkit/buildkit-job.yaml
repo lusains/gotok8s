@@ -9,9 +9,9 @@ data:
     [registry."10.56.184.75:8000"]
     http = true
     insecure = true
-    [registry."image.cestc.cn"]
+    [registry."image.lusain.cn"]
     ca = ["/etc/certs/registry.pem"]
-    [[registry."image.cestc.cn".keypair]]
+    [[registry."image.lusain.cn".keypair]]
     key = "/etc/certs/registry_key.pem"
     cert = "/etc/certs/registry_cert.pem"
 

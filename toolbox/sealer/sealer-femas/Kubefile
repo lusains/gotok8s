@@ -1,0 +1,32 @@
+FROM registry.cn-qingdao.aliyuncs.com/sealer-io/kubernetes:v1.19.8
+#安装helm
+COPY depends/helm/helm-v3.6.0-linux-amd64.tar.gz .
+CMD tar zxvf helm-v3.6.0-linux-amd64.tar.gz && cp linux-amd64/helm /usr/bin && chmod +x /usr/bin/helm
+
+#安装openebs-localpv
+COPY depends/openebs/localpv/localpv-operator.yaml manifests/localpv/
+CMD kubectl apply -f manifests/localpv/localpv-operator.yaml
+
+#安装minio 标准S3的oss对象存储，minio依赖localpv
+#COPY depends/minio manifests/
+#CMD kubectl apply -f manifests/minio/minio-manifeslst.yaml
+
+#安装mysql  依赖localpv
+COPY depends/mysql manifests/
+CMD kubectl apply -f manifests/mysql/mysql-manifest.yaml
+
+#安装redis  依赖localpv
+COPY depends/redis manifests/
+CMD kubectl apply -f manifests/redis/redis-manifest.yaml
+
+#安装 es
+#安装harbor
+
+#安装ingress-nginx
+COPY depends/ingress-nginx manifests/
+CMD kubectl apply -f manifests/ingress-nginx/ingress-nginx-manifest.yaml
+
+#通过helm安装femas
+COPY femas ./charts
+CMD kubectl create namespace femas
+CMD helm install femas charts/femas -n femas

@@ -1,0 +1,38 @@
+apiVersion: sealer.cloud/v2
+kind: Cluster
+metadata:
+  name: my-cluster
+spec:
+  hosts:
+  - ips:
+    - 10.253.17.47
+    roles:
+    - master
+    ssh:
+      port: "22"
+  - ips:
+    - 10.253.17.48
+    - 10.253.17.49
+    roles:
+    - node
+    ssh:
+      port: "22"
+  image: image.lusain.com/femas/sealer-femas:v1
+  ssh:
+    passwd: 123456
+    pk:
+    port: "22"
+    user: root
+
+---
+apiVersion: sealer.aliyun.com/v1alpha1
+kind: Plugin
+metadata:
+  name: MyHostname
+spec:
+  type: HOSTNAME
+  action: PreInit # 指定运行阶段【PreInit ｜ PreInstall ｜ PostInstall ｜ PostClean】
+  data: |
+    10.253.17.47 femas-0
+    10.253.17.48 femas-1
+    10.253.17.49 femas-2
