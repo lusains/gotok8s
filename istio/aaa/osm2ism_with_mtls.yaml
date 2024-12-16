@@ -1,0 +1,91 @@
+#流量从网格外mtls到网格内mtls
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: osm2ism-with-mtls
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      app: httpbin
+    configPatches:
+      - applyTo: FILTER_CHAIN
+        match:
+          context: SIDECAR_INBOUND
+          listener:
+            portNumber: 15006
+        patch:
+          operation: INSERT_FIRST
+          value:
+            name: 0.0.0.0_8080
+            filter_chain_match:
+              transport_protocol: tls
+              application_protocols:
+                - http/1.1
+                - h2
+                - h2c
+              destination_port: 8080
+            filters:
+              - name: envoy.filters.network.http_connection_manager
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                  stat_prefix: inbound_0.0.0.0_8080
+                  route_config:
+                    name: inbound|8080||
+                    virtual_hosts:
+                      - name: inbound|http|8080
+                        domains:
+                          - "*"
+                        routes:
+                          - match:
+                              prefix: "/"
+                            route:
+                              cluster: local_http_cluster
+                              timeout: 0s
+                              max_stream_duration:
+                                max_stream_duration: 0s
+                            name: default
+                  http_filters:
+                    - name: envoy.filters.http.router
+                      typed_config:
+                        "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+            transport_socket:
+              name: envoy.transport_sockets.tls
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                common_tls_context:
+                  tls_certificates:
+                    - certificate_chain:
+                        filename: /etc/certs/cert-chain.pem
+                      private_key:
+                        filename: /etc/certs/key.pem
+                  validation_context:
+                    trusted_ca:
+                      filename: /etc/certs/root-cert.pem
+                    match_subject_alt_names:
+                      exact: "spiffe://cluster.local/ns/httpbin/sa/httpbin"
+                    alpn_protocols:
+                      - h2
+                      - http/1.1
+                      - http/1.0
+                    require_client_certificate: true
+      - applyTo: CLUSTER
+        match:
+          service: local_http_cluster
+        patch:
+          operation: ADD
+          value:
+            name: local_http_cluster
+            type: STRICT_DNS
+            connect_timeout: 0.25s
+            lb_policy: ROUND_ROBIN
+            http2_protocol_options: {}
+            load_assignment:
+              cluster_name: local_http_cluster
+              endpoints:
+                - lb_endpoints:
+                    - endpoint:
+                        address:
+                          socket_address:
+                            address: 127.0.0.1
+                            port_value: 8080

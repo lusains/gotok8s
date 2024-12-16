@@ -1,0 +1,104 @@
+  # 实现网格外mtls到网格内
+  apiVersion: networking.istio.io/v1alpha3
+  kind: EnvoyFilter
+  metadata:
+    name: httpbin-ef-osm2ism
+    namespace: test
+  spec:
+    workloadSelector:
+      labels:
+        app: httpbin
+    configPatches:
+      - applyTo: FILTER_CHAIN
+        match:
+          context: SIDECAR_INBOUND
+          listener:
+            portNumber: 15006
+        patch:
+          operation: INSERT_FIRST
+          value:
+            name: 0.0.0.0_80
+            filter_chain_match:
+              transport_protocol: tls
+              application_protocols:
+                - h2
+                - http/1.1
+              server_names:
+                - httpbin.test.svc.cluster.local
+                - httpbin
+              destination_port: 80
+            filters:
+              - name: envoy.filters.network.http_connection_manager
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                  stat_prefix: inbound_0.0.0.0_80
+                  route_config:
+                    name: inbound|80||
+                    virtual_hosts:
+                      - name: inbound|http|8000
+                        domains:
+                          - "*"
+                        routes:
+                          - match:
+                              prefix: "/"
+                            route:
+                              cluster: inbound|80||
+                              timeout: 0s
+                              max_stream_duration:
+                                max_stream_duration: 0s
+                            decorator:
+                              operation: httpbin.test.svc.cluster.local:8000/*
+                            name: default
+                    validate_clusters: false
+                  http_filters:
+                    - name: envoy.filters.http.router
+                      typed_config:
+                        "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                  http2_protocol_options:
+                    max_concurrent_streams: 1000
+                    max_outbound_frames: 1000
+                    stream_error_on_invalid_http_messaging: true
+                  server_name: istio-envoy
+                  use_remote_address: false
+                  forward_client_cert_details: APPEND_FORWARD
+                  set_current_client_cert_details:
+                    subject: true
+                    dns: true
+                    uri: true
+                  upgrade_configs:
+                    - upgrade_type: websocket
+                  stream_idle_timeout: 0s
+                  normalize_path: true
+            transport_socket:
+              name: envoy.transport_sockets.tls
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                common_tls_context:
+                  tls_params:
+                    tls_minimum_protocol_version: TLSv1_2
+                  alpn_protocols:
+                    - h2
+                    - http/1.1
+                  tls_certificate_sds_secret_configs:
+                    - name: file-cert:/etc/istio/osm-certs/tls.crt~/etc/istio/osm-certs/tls.key
+                      sds_config:
+                        api_config_source:
+                          api_type: GRPC
+                          grpc_services:
+                            - envoy_grpc:
+                                cluster_name: sds-grpc
+                          transport_api_version: V3
+                        resource_api_version: V3
+                  combined_validation_context:
+                    default_validation_context: {}
+                    validation_context_sds_secret_config:
+                      name: file-root:/etc/istio/osm-ca-certs/ca.crt
+                      sds_config:
+                        api_config_source:
+                          api_type: GRPC
+                          grpc_services:
+                            - envoy_grpc:
+                                cluster_name: sds-grpc
+                          transport_api_version: V3
+                        resource_api_version: V3
+                require_client_certificate: true

@@ -1,0 +1,24 @@
+#w3c-tracecontext-filter
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: w3c-tracecontext-filter
+  namespace: istio-system
+spec:
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: ANY
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+            tracing:
+              provider:
+                name: envoy.tracers.zipkin
+                typed_config:
+                  "@type": type.googleapis.com/envoy.config.trace.v3.ZipkinConfig
+                  collector_cluster: zipkin
+                  collector_endpoint: /api/v2/spans
+                  trace_id_128bit: true
