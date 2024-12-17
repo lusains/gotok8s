@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: mtls-demo
+  name: redis-server-istio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: redis-server-istio
+  template:
+    metadata:
+      labels:
+        name: redis-server-istio
+    spec:
+      containers:
+        - name: redis-server-istio
+          image: bitnami/redis:6.2.6
+          ports:
+            - containerPort: 6379
+          env:
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "yes"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-server-istio
+  namespace: mtls-demo
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      name: service-port
+  selector:
+    name: redis-server-istio
+# 注入sidecar  k -n mtls-demo patch deploy redis-server-istio -p

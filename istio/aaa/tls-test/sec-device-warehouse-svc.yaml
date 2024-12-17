@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{"meta.helm.sh/release-name":"sec-device-warehouse","meta.helm.sh/release-namespace":"develop"},"creationTimestamp":"2022-09-09T06:29:38Z","labels":{"app-env":"dev","app-name":"sec-device-warehouse","app.kubernetes.io/managed-by":"Helm","deploy-id":"260736"},"name":"sec-device-warehouse","namespace":"develop","resourceVersion":"890878480","selfLink":"/api/v1/namespaces/develop/services/sec-device-warehouse","uid":"be77a8ea-770c-4543-8ba8-5a5d4921926b"},"spec":{"clusterIP":"10.81.36.5","ports":[{"name":"http","port":8080,"protocol":"TCP","targetPort":8080},{"name":"grpc","port":9090,"protocol":"TCP","targetPort":9090}],"selector":{"app-env":"dev","app-name":"sec-device-warehouse"},"sessionAffinity":"None","type":"ClusterIP"},"status":{"loadBalancer":{}}}
+    meta.helm.sh/release-name: sec-device-warehouse
+    meta.helm.sh/release-namespace: develop
+  labels:
+    app-env: dev
+    app-name: sec-device-warehouse
+    app.kubernetes.io/managed-by: Helm
+    deploy-id: "260736"
+  name: sec-device-warehouse
+  namespace: tls-test
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: grpc
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app-env: dev
+    app-name: sec-device-warehouse
+  sessionAffinity: None
+  type: ClusterIP
