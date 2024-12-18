@@ -1,0 +1,259 @@
+kind: EnvoyFilter
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: test-service-grid-d-transport
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      app-name: test-service-grid-d
+  configPatches:
+    - applyTo: FILTER_CHAIN
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          portNumber: 15006
+      patch:
+        operation: INSERT_FIRST
+        value:
+          filter_chain_match:
+            destination_port: 19443
+            transport_protocol: tls
+          filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                '@type': >-
+                  type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                access_log:
+                  - name: envoy.access_loggers.file
+                    typed_config:
+                      "@type": "type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog"
+                      path: /dev/stdout
+                      log_format:
+                        json_format:
+                          start_time: "%START_TIME%"
+                          method: "%REQ(:METHOD)%"
+                          path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+                          protocol: "%PROTOCOL%"
+                          response_code: "%RESPONSE_CODE%"
+                          response_flags: "%RESPONSE_FLAGS%"
+                          bytes_received: "%BYTES_RECEIVED%"
+                          bytes_sent: "%BYTES_SENT%"
+                          duration: "%DURATION%"
+                          upstream_service_time: "%RESP(x-envoy-upstream-service-time)%"
+                          x_forwarded_for: "%REQ(x-forwarded-for)%"
+                          user_agent: "%REQ(user-agent)%"
+                          request_id: "%REQ(x-request-id)%"
+                          authority: "%REQ(:authority)%"
+                          upstream_host: "%UPSTREAM_HOST%"
+                          upstream_cluster: "%UPSTREAM_CLUSTER%"
+                          downstream_tls_version: "%DOWNSTREAM_TLS_VERSION%"
+                http_filters:
+                  - name: envoy.filters.http.router
+                route_config:
+                  name: inbound|grpc
+                  virtual_hosts:
+                    - domains:
+                        - '*'
+                      name: inbound|grpc
+                      routes:
+                        - match:
+                            prefix: /
+                          route:
+                            cluster: grpc_cluster
+                            name: default
+                stat_prefix: inbound_0.0.0.0_9090
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              '@type': >-
+                type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+              common_tls_context:
+                alpn_protocols:
+                  - http/1.0
+                  - http/1.1
+                  - h2
+                  - http/2
+                tls_certificate_sds_secret_configs:
+                  - name: default
+                    sds_config:
+                      api_config_source:
+                        api_type: GRPC
+                        grpc_services:
+                          - envoy_grpc:
+                              cluster_name: sds-grpc
+                        set_node_on_first_message_only: true
+                        transport_api_version: V3
+                      initial_fetch_timeout: 0s
+                      resource_api_version: V3
+                validation_context_sds_secret_config:
+                  name: ROOTCA
+                  sds_config:
+                    api_config_source:
+                      api_type: GRPC
+                      grpc_services:
+                        - envoy_grpc:
+                            cluster_name: sds-grpc
+                      set_node_on_first_message_only: true
+                      transport_api_version: V3
+                    initial_fetch_timeout: 0s
+                    resource_api_version: V3
+              require_client_certificate: true
+    - applyTo: CLUSTER
+      patch:
+        operation: ADD
+        value:
+          name: "grpc_cluster"
+          connect_timeout: "0.25s"
+          type: LOGICAL_DNS
+          lb_policy: ROUND_ROBIN
+          dns_lookup_family: V4_ONLY
+          typed_extension_protocol_options:
+            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+              "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+              explicit_http_config:
+                http2_protocol_options: { }
+          load_assignment:
+            cluster_name: "grpc_cluster"
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: 127.0.0.1
+                          port_value: 9090
+    - applyTo: FILTER_CHAIN
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          portNumber: 15006
+      patch:
+        operation: INSERT_FIRST
+        value:
+          filter_chain_match:
+            destination_port: 18443
+            transport_protocol: tls
+          filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                '@type': >-
+                  type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                access_log:
+                  - name: envoy.access_loggers.file
+                    typed_config:
+                      "@type": "type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog"
+                      path: /dev/stdout
+                      log_format:
+                        json_format:
+                          start_time: "%START_TIME%"
+                          method: "%REQ(:METHOD)%"
+                          path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+                          protocol: "%PROTOCOL%"
+                          response_code: "%RESPONSE_CODE%"
+                          response_flags: "%RESPONSE_FLAGS%"
+                          bytes_received: "%BYTES_RECEIVED%"
+                          bytes_sent: "%BYTES_SENT%"
+                          duration: "%DURATION%"
+                          upstream_service_time: "%RESP(x-envoy-upstream-service-time)%"
+                          x_forwarded_for: "%REQ(x-forwarded-for)%"
+                          user_agent: "%REQ(user-agent)%"
+                          request_id: "%REQ(x-request-id)%"
+                          authority: "%REQ(:authority)%"
+                          upstream_host: "%UPSTREAM_HOST%"
+                          upstream_cluster: "%UPSTREAM_CLUSTER%"
+                          downstream_tls_version: "%DOWNSTREAM_TLS_VERSION%"
+                http_filters:
+                  - name: envoy.filters.http.rbac
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.rbac.v3.RBAC
+                      rules:
+                        action: DENY
+                        policies:
+                          ns[istio-system]-policy[test-service-grid-d]-rule[0]:
+                            permissions:
+                            - notRule:
+                                orRules:
+                                  rules:
+                                  - urlPath:
+                                      path:
+                                        exact: /ip
+                        principals:
+                        - andIds:
+                            ids:
+                            - orIds:
+                                ids:
+                                - authenticated:
+                                    principalName:
+                                      safeRegex:
+                                        googleRe2: {}
+                                        regex: spiffe://.*/sa/test-go-sdk-e
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                route_config:
+                  name: inbound|http
+                  virtual_hosts:
+                    - domains:
+                        - '*'
+                      name: inbound|http
+                      routes:
+                        - match:
+                            prefix: /
+                          route:
+                            cluster: http_cluster
+                            name: default
+                stat_prefix: inbound_0.0.0.0_8080
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              '@type': >-
+                type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+              common_tls_context:
+                alpn_protocols:
+                  - http/1.0
+                  - http/1.1
+                  - h2
+                  - http/2
+                tls_certificate_sds_secret_configs:
+                  - name: default
+                    sds_config:
+                      api_config_source:
+                        api_type: GRPC
+                        grpc_services:
+                          - envoy_grpc:
+                              cluster_name: sds-grpc
+                        set_node_on_first_message_only: true
+                        transport_api_version: V3
+                      initial_fetch_timeout: 0s
+                      resource_api_version: V3
+                validation_context_sds_secret_config:
+                  name: ROOTCA
+                  sds_config:
+                    api_config_source:
+                      api_type: GRPC
+                      grpc_services:
+                        - envoy_grpc:
+                            cluster_name: sds-grpc
+                      set_node_on_first_message_only: true
+                      transport_api_version: V3
+                    initial_fetch_timeout: 0s
+                    resource_api_version: V3
+              require_client_certificate: true
+    - applyTo: CLUSTER
+      patch:
+        operation: ADD
+        value:
+          name: "http_cluster"
+          connect_timeout: "0.25s"
+          type: LOGICAL_DNS
+          lb_policy: ROUND_ROBIN
+          dns_lookup_family: V4_ONLY
+          load_assignment:
+            cluster_name: "http_cluster"
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: 127.0.0.1
+                          port_value: 8080

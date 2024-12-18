@@ -1,0 +1,27 @@
+kind: EnvoyFilter
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: merge-alpn-ef-test-service-grid-d
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      app-name: test-service-grid-d
+  configPatches:
+    - applyTo: FILTER_CHAIN
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          portNumber: 8080
+          filterChain:
+            transportProtocol: tls
+      patch:
+        operation: MERGE
+        value:
+          filter_chain_match:
+            application_protocols:
+              - http/1.0
+              - http/1.1
+              - h2
+              - h2c
+              - ""  # 为了兼容java 1.8.0_222 mtls application_protocols为空

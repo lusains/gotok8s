@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{"meta.helm.sh/release-name":"rms","meta.helm.sh/release-namespace":"develop"},"creationTimestamp":"2022-06-29T02:51:51Z","labels":{"app-env":"dev","app-name":"rms","app.kubernetes.io/managed-by":"Helm","deploy-id":"268160"},"name":"rms","namespace":"develop","resourceVersion":"900744054","selfLink":"/api/v1/namespaces/develop/services/rms","uid":"fc54510c-0858-4ea2-94bf-53d09010949d"},"spec":{"clusterIP":"10.81.158.49","ports":[{"name":"http","port":8080,"protocol":"TCP","targetPort":8080},{"name":"grpc","port":9090,"protocol":"TCP","targetPort":9090}],"selector":{"app-env":"dev","app-name":"rms"},"sessionAffinity":"None","type":"ClusterIP"},"status":{"loadBalancer":{}}}
+    meta.helm.sh/release-name: rms
+    meta.helm.sh/release-namespace: develop
+  labels:
+    app-env: dev
+    app-name: rms
+    app.kubernetes.io/managed-by: Helm
+    deploy-id: "268160"
+  name: rms
+  namespace: tls-test
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: grpc
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app-env: dev
+    app-name: rms
+  sessionAffinity: None
+  type: ClusterIP

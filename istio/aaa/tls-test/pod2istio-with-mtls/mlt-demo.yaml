@@ -1,0 +1,218 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: root-issuer
+  namespace: mtls-demo
+spec:
+  ca:
+    secretName: cacerts
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-server-tls-certificate
+  namespace: mtls-demo
+spec:
+  secretName: redis-server-tls-certificate
+  privateKey:
+    algorithm: ECDSA
+    encoding: PKCS8
+    size: 256
+  commonName: "redis demo"
+  usages:
+    - server auth
+    - key encipherment
+    - digital signature
+  issuerRef:
+    name: root-issuer
+    kind: Issuer
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-client-certificate-keystore-password
+  namespace: mtls-demo
+data:
+  password: cGFzc3dvcmQxMjM= # "password123"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-client-certificate
+  namespace: mtls-demo
+spec:
+  secretName: redis-client-certificate
+  privateKey:
+    algorithm: ECDSA
+    encoding: PKCS8
+    size: 256
+  commonName: "redis demo"
+  usages:
+    - client auth
+    - key encipherment
+    - digital signature
+  issuerRef:
+    name: root-issuer
+    kind: Issuer
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        name: redis-client-certificate-keystore-password
+        key: password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: mtls-demo
+  name: redis-server-tls
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: redis-server-tls
+  template:
+    metadata:
+      labels:
+        name: redis-server-tls
+    spec:
+      volumes:
+        - name: certs
+          secret:
+            secretName: redis-server-tls-certificate
+      containers:
+        - name: redis-server-tls
+          image: bitnami/redis:6.2.6
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - mountPath: /certs
+              name: certs
+          env:
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "yes"
+            - name: REDIS_TLS_ENABLED
+              value: "yes"
+            - name: REDIS_TLS_PORT
+              value: "6379"
+            - name: REDIS_TLS_CERT_FILE
+              value: "/certs/tls.crt"
+            - name: REDIS_TLS_KEY_FILE
+              value: "/certs/tls.key"
+            - name: REDIS_TLS_CA_FILE
+              value: "/certs/ca.crt"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-server-tls
+  namespace: mtls-demo
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      name: service-port
+  selector:
+    name: redis-server-tls
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cacert-service-binding-type
+  namespace: mtls-demo
+data:
+  type: "ca-certificates"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-client-tls-java-opts
+  namespace: mtls-demo
+stringData:
+  JAVA_OPTS: >-
+    -Djavax.net.ssl.keyStoreType=PKCS12
+    -Djavax.net.ssl.keyStore=/certs/keystore.p12
+    -Djavax.net.ssl.keyStorePassword=password123
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis-client-tls
+  name: redis-client-tls
+  namespace: mtls-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-client-tls
+  template:
+    metadata:
+      labels:
+        app: redis-client-tls
+    spec:
+      volumes:
+        - name: client-certificate
+          secret:
+            secretName: redis-client-certificate
+        - name: cacert-service-binding
+          projected:
+            sources:
+              - configMap:
+                  name: cacert-service-binding-type
+              - secret:
+                  name: redis-client-certificate
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+      containers:
+        - image: docker.jidudev.com/tech/spring-boot-redis-mtls-demo:basic
+          name: redis-client-tls
+          volumeMounts:
+            - mountPath: /certs
+              name: client-certificate
+            - mountPath: /bindings/cacert-service-binding
+              name: cacert-service-binding
+          env:
+            - name: SERVICE_BINDING_ROOT
+              value: "/bindings"
+            - name: SPRING_REDIS_HOST
+              value: "redis-server-tls"
+            - name: SPRING_REDIS_PORT
+              value: "6379"
+            - name: SPRING_REDIS_SSL
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: redis-client-tls-java-opts
+          ports:
+            - containerPort: 8080
+              name: app-port
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: app-port
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: app-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-client-tls
+  name: redis-client-tls
+  namespace: mtls-demo
+spec:
+  ports:
+    - name: service-port
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: redis-client-tls
+  type: ClusterIP

@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis-client-normal
+  name: redis-client-normal
+  namespace: mtls-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-client-normal
+  template:
+    metadata:
+      labels:
+        app: redis-client-normal
+    spec:
+      containers:
+        - image: docker.jidudev.com/tech/spring-boot-redis-mtls-demo:basic
+          name: redis-client-normal
+          env:
+            - name: SPRING_REDIS_HOST
+              value: "redis-server-istio"
+            - name: SPRING_REDIS_PORT
+              value: "6379"
+          ports:
+            - containerPort: 8080
+              name: app-port
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: app-port
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: app-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-client-normal
+  name: redis-client-normal
+  namespace: mtls-demo
+spec:
+  ports:
+    - name: service-port
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: redis-client-normal
+  type: ClusterIP

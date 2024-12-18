@@ -1,0 +1,159 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "3"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"deployment.kubernetes.io/revision":"119"},"labels":{"app-name":"rms","deploy-id":"268160"},"name":"rms","namespace":"develop"},"spec":{"progressDeadlineSeconds":600,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app-env":"dev","app-name":"rms"}},"strategy":{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"instrumentation.opentelemetry.io/inject-java":"jidu-dev-instrumentation-beta","logs.injector.tumblr.com/request":"rms","prometheus.io/path":"/actuator/prometheus","prometheus.io/port":"8081","prometheus.io/scheme":"http","prometheus.io/scrape":"true"},"labels":{"app-env":"dev","app-name":"rms","app.kubernetes.io/instance":"rms","app.kubernetes.io/name":"rms","deploy-id":"268160"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchExpressions":[{"key":"app-name","operator":"In","values":["rms"]}]},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"ENVIRONMENT","value":"dev"},{"name":"OTEL_SERVICE_NAME","value":"rms"},{"name":"JIDU_NODE_NAME","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"spec.nodeName"}}},{"name":"JIDU_SWIMLANE","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"metadata.namespace"}}},{"name":"JIDU_APP_INSTANCE","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"metadata.name"}}},{"name":"JIDU_DEPLOY_ID","value":"268160"}],"envFrom":[{"configMapRef":{"name":"cluster-config"}}],"image":"docker.jidudev.com/tech/rms:d.9bf37.57.1733","imagePullPolicy":"Always","lifecycle":{"preStop":{"exec":{"command":["/bin/sh","-c","sleep 10"]}}},"livenessProbe":{"failureThreshold":5,"httpGet":{"path":"/misc/ping","port":8080,"scheme":"HTTP"},"initialDelaySeconds":120,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":6},"name":"rms","ports":[{"containerPort":8080,"name":"http","protocol":"TCP"},{"containerPort":9090,"name":"grpc","protocol":"TCP"}],"readinessProbe":{"failureThreshold":20,"httpGet":{"path":"/actuator/health","port":8080,"scheme":"HTTP"},"initialDelaySeconds":10,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":6},"resources":{"limits":{"cpu":"2","memory":"4Gi"},"requests":{"cpu":"100m","memory":"1Gi"}},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File","volumeMounts":[{"mountPath":"/app/logs","name":"volume-0"},{"mountPath":"/app/.flume","name":"volume-1"}]}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{"fsGroup":500},"terminationGracePeriodSeconds":60,"topologySpreadConstraints":[{"labelSelector":{"matchLabels":{"app-name":"rms"}},"maxSkew":1,"topologyKey":"kubernetes.io/hostname","whenUnsatisfiable":"DoNotSchedule"},{"labelSelector":{"matchLabels":{"app-name":"rms"}},"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"DoNotSchedule"}],"volumes":[{"hostPath":{"path":"/data/logs","type":""},"name":"volume-0"},{"hostPath":{"path":"/data/.flume","type":""},"name":"volume-1"}]}}}}
+  labels:
+    app-name: rms
+    deploy-id: "268160"
+  name: rms
+  namespace: tls-test
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app-env: dev
+      app-name: rms
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: jidu-dev-instrumentation-beta
+        logs.injector.tumblr.com/request: rms
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "8081"
+        prometheus.io/scheme: http
+        prometheus.io/scrape: "true"
+      labels:
+        app-env: dev
+        app-name: rms
+        app.kubernetes.io/instance: rms
+        app.kubernetes.io/name: rms
+        deploy-id: "268160"
+        sidecar.istio.io/inject: "true"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app-name
+                  operator: In
+                  values:
+                  - rms
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - env:
+        - name: ENVIRONMENT
+          value: dev
+        - name: OTEL_SERVICE_NAME
+          value: rms
+        - name: JIDU_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: JIDU_SWIMLANE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: JIDU_APP_INSTANCE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: JIDU_DEPLOY_ID
+          value: "268160"
+        envFrom:
+        - configMapRef:
+            name: cluster-config
+        image: docker.jidudev.com/tech/rms:d.9bf37.57.1733
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - sleep 10
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /misc/ping
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 6
+        name: rms
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: grpc
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 20
+          httpGet:
+            path: /actuator/health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 6
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+          requests:
+            cpu: 100m
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /app/logs
+          name: volume-0
+        - mountPath: /app/.flume
+          name: volume-1
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 500
+      terminationGracePeriodSeconds: 60
+      topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app-name: rms
+        maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+      - labelSelector:
+          matchLabels:
+            app-name: rms
+        maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+      volumes:
+      - hostPath:
+          path: /data/logs
+          type: ""
+        name: volume-0
+      - hostPath:
+          path: /data/.flume
+          type: ""
+        name: volume-1

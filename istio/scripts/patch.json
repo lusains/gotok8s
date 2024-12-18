@@ -1,0 +1,15 @@
+{
+  "spec": {
+    "template": {
+      "spec": {
+        "containers": [{
+          "name": "istio-proxy",
+          "env": [{
+            "name": "ISTIO_PROMETHEUS_ANNOTATIONS",
+            "value": "{\"scrape\":\"true\",\"path\":\"/actuator/prometheus\",\"port\":\"8081\"}"
+          }]
+        }]
+      }
+    }
+  }
+}

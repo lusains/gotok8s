@@ -1,0 +1,10 @@
+DEPLOYMENT,PROTOCOL,PORT
+redis-port:3306
+mysql-port:6379
+agent-http-port:8082
+grpc-port:9090
+http-port:80
+http-port:8080
+log-http-port:8083
+service-port:18883
+tcp-8848-port:8848

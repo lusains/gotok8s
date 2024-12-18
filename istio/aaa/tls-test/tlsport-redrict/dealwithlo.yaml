@@ -1,0 +1,11 @@
+kind: EnvoyFilter
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: test-service-grid-c-transport
+  namespace: develop
+spec:
+  workloadSelector:
+    labels:
+      app-name: test-service-grid-c
+  configPatches:
+    - applyTo:

@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "6"
+    field.cattle.io/publicEndpoints: '[{"addresses":["10.80.0.170"],"port":8080,"protocol":"TCP","serviceName":"develop:sec-device-warehouse-for-traffic-entry","allNodes":false}]'
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"deployment.kubernetes.io/revision":"97","field.cattle.io/publicEndpoints":"[{\"addresses\":[\"10.80.0.170\"],\"port\":8080,\"protocol\":\"TCP\",\"serviceName\":\"develop:sec-device-warehouse-for-traffic-entry\",\"allNodes\":false}]"},"labels":{"app-name":"sec-device-warehouse","deploy-id":"260736"},"name":"sec-device-warehouse","namespace":"develop"},"spec":{"progressDeadlineSeconds":600,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app-env":"dev","app-name":"sec-device-warehouse"}},"strategy":{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"0%"},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"instrumentation.opentelemetry.io/inject-java":"jidu-dev-instrumentation-beta","logs.injector.tumblr.com/request":"sec-device-warehouse","prometheus.io/path":"/actuator/prometheus","prometheus.io/port":"8081","prometheus.io/scheme":"http","prometheus.io/scrape":"true"},"labels":{"app-env":"dev","app-name":"sec-device-warehouse","app.kubernetes.io/instance":"sec-device-warehouse","app.kubernetes.io/name":"sec-device-warehouse","deploy-id":"260736"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchExpressions":[{"key":"app-name","operator":"In","values":["sec-device-warehouse"]}]},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"ENVIRONMENT","value":"dev"},{"name":"OTEL_SERVICE_NAME","value":"sec-device-warehouse"},{"name":"JIDU_NODE_NAME","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"spec.nodeName"}}},{"name":"JIDU_SWIMLANE","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"metadata.namespace"}}},{"name":"JIDU_APP_INSTANCE","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"metadata.name"}}},{"name":"JIDU_DEPLOY_ID","value":"260736"}],"envFrom":[{"configMapRef":{"name":"cluster-config"}}],"image":"docker.jidudev.com/tech/sec-device-warehouse:d.86fed.d7.1135","imagePullPolicy":"Always","lifecycle":{"preStop":{"exec":{"command":["/bin/sh","-c","sleep 10"]}}},"livenessProbe":{"failureThreshold":5,"httpGet":{"path":"/misc/ping","port":8080,"scheme":"HTTP"},"initialDelaySeconds":120,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":6},"name":"sec-device-warehouse","ports":[{"containerPort":8080,"name":"http","protocol":"TCP"},{"containerPort":9090,"name":"grpc","protocol":"TCP"}],"readinessProbe":{"failureThreshold":20,"httpGet":{"path":"/actuator/health","port":8080,"scheme":"HTTP"},"initialDelaySeconds":10,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":6},"resources":{"limits":{"cpu":"2","memory":"4Gi"},"requests":{"cpu":"100m","memory":"1Gi"}},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File","volumeMounts":[{"mountPath":"/app/logs","name":"volume-0"},{"mountPath":"/app/.flume","name":"volume-1"}]}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{"fsGroup":500},"terminationGracePeriodSeconds":60,"topologySpreadConstraints":[{"labelSelector":{"matchLabels":{"app-name":"sec-device-warehouse"}},"maxSkew":1,"topologyKey":"kubernetes.io/hostname","whenUnsatisfiable":"DoNotSchedule"},{"labelSelector":{"matchLabels":{"app-name":"sec-device-warehouse"}},"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"DoNotSchedule"}],"volumes":[{"hostPath":{"path":"/data/logs","type":""},"name":"volume-0"},{"hostPath":{"path":"/data/.flume","type":""},"name":"volume-1"}]}}}}
+  labels:
+    app-name: sec-device-warehouse
+    deploy-id: "260736"
+  name: sec-device-warehouse
+  namespace: tls-test
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app-env: dev
+      app-name: sec-device-warehouse
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: jidu-dev-instrumentation-beta
+        logs.injector.tumblr.com/request: sec-device-warehouse
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "8081"
+        prometheus.io/scheme: http
+        prometheus.io/scrape: "true"
+      labels:
+        app-env: dev
+        app-name: sec-device-warehouse
+        app.kubernetes.io/instance: sec-device-warehouse
+        app.kubernetes.io/name: sec-device-warehouse
+        deploy-id: "260736"
+        sidecar.istio.io/inject: "true"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app-name
+                  operator: In
+                  values:
+                  - sec-device-warehouse
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - env:
+        - name: ENVIRONMENT
+          value: dev
+        - name: OTEL_SERVICE_NAME
+          value: sec-device-warehouse
+        - name: JIDU_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: JIDU_SWIMLANE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: JIDU_APP_INSTANCE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: JIDU_DEPLOY_ID
+          value: "260736"
+        envFrom:
+        - configMapRef:
+            name: cluster-config
+        image: docker.jidudev.com/tech/sec-device-warehouse:d.eb65b.6a.1510
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - sleep 10
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /misc/ping
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 6
+        name: sec-device-warehouse
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: grpc
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 20
+          httpGet:
+            path: /actuator/health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 6
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+          requests:
+            cpu: 100m
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /app/logs
+          name: volume-0
+        - mountPath: /app/.flume
+          name: volume-1
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 500
+      terminationGracePeriodSeconds: 60
+      topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app-name: sec-device-warehouse
+        maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+      - labelSelector:
+          matchLabels:
+            app-name: sec-device-warehouse
+        maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+      volumes:
+      - hostPath:
+          path: /data/logs
+          type: ""
+        name: volume-0
+      - hostPath:
+          path: /data/.flume
+          type: ""
+        name: volume-1
