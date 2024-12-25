@@ -1,0 +1,12 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: filter-health-check-logs
+  namespace: istio-system
+spec:
+  accessLogging:
+    - filter:
+        #cel 表达式，过滤掉路径中包含/actuator/health和/misc/ping的请求
+        expression: request.path != "/actuator/health" && request.path != "/misc/ping"
+      providers:
+        - name: envoy

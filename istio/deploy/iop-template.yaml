@@ -1,0 +1,77 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: iop-test-dev
+  namespace: istio-system
+spec:
+  tag: 1.16.5
+  hub: registry.baidubce.com/online-csm
+  namespace: istio-system
+  meshConfig:
+    accessLogFile: /dev/stdout
+    accessLogEncoding: JSON
+    defaultConfig:
+      holdApplicationUntilProxyStarts: true
+      proxyMetadata:
+        # 开启智能 DNS
+        ISTIO_META_DNS_CAPTURE: "true"
+        ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+      # 支持多协议
+      proxyStatsMatcher:
+        inclusionPrefixes:
+          - thrift
+          - dubbo
+          - kafka
+          - meta_protocol
+        inclusionRegexps:
+          - .*dubbo.*
+          - .*thrift.*
+          - .*kafka.*
+          - .*zookeeper.*
+          - .*meta_protocol.*
+  values:
+    global:
+      meshID: csm-benchmark-dev
+      multiCluster:
+        clusterName: bj-cce-lyogtvrh
+      istioNamespace: istio-system
+      proxy:
+        image: proxyv2
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      proxy_init:
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 10m
+            memory: 10Mi
+      network: bj
+    sidecarInjectorWebhook:
+      rewriteAppHTTPProbe: true
+  components:
+    pilot:
+      k8s:
+        hpaSpec:
+          minReplicas: 1
+        overlays:
+          - kind: Deployment
+            name: istiod
+            patches:
+              - path: spec.template.spec.containers.[name:discovery].resources.requests.cpu
+                value: "0.5"
+              - path: spec.template.spec.containers.[name:discovery].resources.requests.memory
+                value: "1Gi"
+              - path: spec.template.spec.containers.[name:discovery].resources.limits.cpu
+                value: "2"
+              - path: spec.template.spec.containers.[name:discovery].resources.limits.memory
+                value: "4Gi"
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: false

@@ -234,7 +234,7 @@
               "@type": "type.googleapis.com/udpa.type.v1.TypedStruct",
               "type_url": "type.googleapis.com/lane.Decoder",
               "value": {
-                "routeheader": "x-jidu-color",
+                "routeheader": "x-gotok8s-color",
                 "traceheader": "traceparent",
                 "type": "W3C_TRACE_CONTEXT"
               }
@@ -391,7 +391,7 @@
               "literal": {
                 "value": "mesh"
               },
-              "tag": "jidu_env"
+              "tag": "gotok8s_env"
             }
           ],
           "overall_sampling": {

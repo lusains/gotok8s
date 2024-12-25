@@ -17,7 +17,7 @@ spec:
         app: redis-client-normal
     spec:
       containers:
-        - image: docker.jidudev.com/tech/spring-boot-redis-mtls-demo:basic
+        - image: docker.io/tech/spring-boot-redis-mtls-demo:basic
           name: redis-client-normal
           env:
             - name: SPRING_REDIS_HOST

@@ -18,6 +18,6 @@ for DEPLOY in "${DEPLOYMENTS[@]}"; do
     #kubectl rollout restart deployment $DEPLOY --namespace=$NAMESPACE
 done
 
-kubectl patch deployment mesh-python-demo -n istio-sl --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"instrumentation.opentelemetry.io/inject-python\":\"jidu-dev-instrumentation-beta\"}}}}}"kubectl patch deployment mesh-python-demo -n istio-sl --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"instrumentation.opentelemetry.io/inject-python\":\"jidu-dev-instrumentation-beta\"}}}}}"
+kubectl patch deployment mesh-python-demo -n istio-sl --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"instrumentation.opentelemetry.io/inject-python\":\"gotok8s-dev-instrumentation-beta\"}}}}}"kubectl patch deployment mesh-python-demo -n istio-sl --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"instrumentation.opentelemetry.io/inject-python\":\"gotok8s-dev-instrumentation-beta\"}}}}}"
 
 echo "操作完成"

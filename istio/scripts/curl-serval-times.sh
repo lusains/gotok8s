@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # URL and headers
-URL='https://test-service-grid-b.jidutest.com/grpc_c_sleep'
+URL='https://test-service-grid-b.gotok8stest.com/grpc_c_sleep'
 HEADERS=(
     '-H' 'Content-Type: application/json'
 )

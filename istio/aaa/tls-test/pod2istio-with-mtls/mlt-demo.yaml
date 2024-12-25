@@ -168,7 +168,7 @@ spec:
                     - key: ca.crt
                       path: ca.crt
       containers:
-        - image: docker.jidudev.com/tech/spring-boot-redis-mtls-demo:basic
+        - image: docker.io/tech/spring-boot-redis-mtls-demo:basic
           name: redis-client-tls
           volumeMounts:
             - mountPath: /certs

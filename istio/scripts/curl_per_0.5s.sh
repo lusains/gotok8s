@@ -6,7 +6,7 @@ URL='https://10.80.233.97:8080/ip'
 # Headers for the request
 HEADERS=(
   -H "Content-Type: application/json"
-  -H "Cookie: jidu_device_id=bfc83076-3bcf-4463-9cf5-a4aa612a5f6b"
+  -H "Cookie: gotok8s_device_id=bfc83076-3bcf-4463-9cf5-a4aa612a5f6b"
 )
 
 # Data payload for the request
