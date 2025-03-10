@@ -1,0 +1,27 @@
+app:
+  name: "my-app"
+  mode: "development"
+  log_level: "debug"
+
+database:
+  driver: "postgres"
+  dsn: "host=localhost port=5432 user=postgres password=postgres dbname=myapp sslmode=disable"
+  max_open_conns: 100
+  max_idle_conns: 10
+  conn_max_lifetime: 1h
+  auto_migrate: true
+  seed_data: true
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+script:
+  path: "./scripts"
+  pre_scripts:
+    - "01_init_schema.sql"
+    - "02_create_indexes.sql"
+  post_scripts:
+    - "03_seed_data.sql"
+    - "04_create_views.sql" 
