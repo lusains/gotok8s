@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: redis-server-normal
-          image: bitnami/redis:6.2.6
+          image: soldevelo/redis:6.2.16
           ports:
             - containerPort: 6379
           env:
